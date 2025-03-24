@@ -4,54 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Importar XML</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-        .container {
-            width: 80%;
-            margin: 20px auto;
-            background-color: #fff;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-        h2, h3, h4 {
-            color: #0056b3;
-        }
-        input[type="file"] {
-            margin: 20px 0;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .info-section {
-            margin-bottom: 20px;
-        }
-        .info-section p {
-            margin: 5px 0;
-        }
-        .cotas-info, .rentabilidade-info {
-            margin-top: 20px;
-        }
-        .cotas-info h4, .rentabilidade-info h4 {
-            border-bottom: 2px solid #0056b3;
-            padding-bottom: 5px;
-        }
-        .cota-item {
-            background-color: #e9f0f8;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .cota-item strong {
-            color: #0056b3;
-        }
-    </style>
     <script>
         function handleFileSelect(event) {
             const file = event.target.files[0];
@@ -62,63 +14,72 @@
                     const xmlDoc = parser.parseFromString(e.target.result, "text/xml");
                     
                     // Extraindo informações básicas
-                    const versao = xmlDoc.getElementsByTagName("VERSAO")[0]?.textContent || "N/A";
-                    const dataCompetencia = xmlDoc.getElementsByTagName("DT_COMPT")[0]?.textContent || "N/A";
-                    const cnpjAdm = xmlDoc.getElementsByTagName("NR_CNPJ_ADM")[0]?.textContent || "N/A";
-                    const patrimonioLiquido = xmlDoc.getElementsByTagName("VL_SOM_PATRLIQ")[0]?.textContent || "0";
+                    const versao = xmlDoc.getElementsByTagName("VERSAO")[0].textContent;
+                    const dataCompetencia = xmlDoc.getElementsByTagName("DT_COMPT")[0].textContent;
+                    const cnpjAdm = xmlDoc.getElementsByTagName("NR_CNPJ_ADM")[0].textContent;
+                    const patrimonioLiquido = xmlDoc.getElementsByTagName("VL_SOM_PATRLIQ")[0].textContent;
                     
-                    // Construindo a exibição das informações básicas
-                    let basicInfo = `
-                        <div class="info-section">
-                            <p><strong>Versão:</strong> ${versao}</p>
-                            <p><strong>Data de Competência:</strong> ${dataCompetencia}</p>
-                            <p><strong>CNPJ Administrador:</strong> ${cnpjAdm}</p>
-                            <p><strong>Patrimônio Líquido:</strong> R$ ${parseFloat(patrimonioLiquido).toLocaleString('pt-BR')}</p>
-                        </div>
-                    `;
-                    
-                    // Extraindo e exibindo informações de cotas
-                    let cotasInfo = '<div class="cotas-info"><h3>Informações de Cotas</h3>';
+                    // Extraindo informações de cotas e valores
+                    let cotasInfo = "<h3>Informações de Cotas</h3>";
                     const seriesSenior = xmlDoc.getElementsByTagName("DESC_SERIE_CLASSE_SENIOR");
                     const seriesSubord = xmlDoc.getElementsByTagName("DESC_SERIE_CLASSE_SUBORD");
                     
-                    cotasInfo += '<h4>Senior</h4>';
+                    cotasInfo += "<h4>Senior</h4>";
                     for (let i = 0; i < seriesSenior.length; i++) {
-                        let serie = seriesSenior[i].getElementsByTagName("SERIE")[0]?.textContent || "N/A";
-                        let qtCotas = parseFloat(seriesSenior[i].getElementsByTagName("QT_COTAS")[0]?.textContent || "0");
-                        let vlCotas = parseFloat(seriesSenior[i].getElementsByTagName("VL_COTAS")[0]?.textContent || "0");
+                        let serie = seriesSenior[i].getElementsByTagName("SERIE")[0].textContent;
+                        let qtCotas = parseFloat(seriesSenior[i].getElementsByTagName("QT_COTAS")[0].textContent);
+                        let vlCotas = parseFloat(seriesSenior[i].getElementsByTagName("VL_COTAS")[0].textContent);
                         let valorTotal = qtCotas * vlCotas;
-                        let qtCotistas = parseInt(seriesSenior[i].getElementsByTagName("QT_COTISTAS")[0]?.textContent || "0");
+                        let qtCotistas = parseInt(xmlDoc.getElementsByTagName("QT_COTISTAS")[i].textContent);
                         
                         if (valorTotal > 0) {
-                            cotasInfo += `
-                                <div class="cota-item">
-                                    <p><strong>${serie}</strong></p>
-                                    <p>Quantidade: ${qtCotas.toLocaleString('pt-BR')}</p>
-                                    <p>Valor da Cota: R$ ${vlCotas.toLocaleString('pt-BR')}</p>
-                                    <p>Valor Total: R$ ${valorTotal.toLocaleString('pt-BR')}</p>
-                                    <p>Quantidade de Cotistas: ${qtCotistas}</p>
-                                </div>
-                            `;
+                            cotasInfo += `<p><strong>${serie}</strong> - Quantidade: ${qtCotas.toLocaleString('pt-BR')} | Valor: R$ ${vlCotas.toLocaleString('pt-BR')} | Total: R$ ${valorTotal.toLocaleString('pt-BR')} | Cotistas: ${qtCotistas}</p>`;
                         }
                     }
                     
-                    cotasInfo += '<h4>Subordinada</h4>';
+                    cotasInfo += "<h4>Subordinada</h4>";
                     for (let i = 0; i < seriesSubord.length; i++) {
-                        let tipo = seriesSubord[i].getElementsByTagName("TIPO")[0]?.textContent || "N/A";
+                        let tipo = seriesSubord[i].getElementsByTagName("TIPO")[0].textContent;
                         let serie = seriesSubord[i].getElementsByTagName("SERIE")[0]?.textContent || "Sem Série";
-                        let qtCotas = parseFloat(seriesSubord[i].getElementsByTagName("QT_COTAS")[0]?.textContent || "0");
-                        let vlCotas = parseFloat(seriesSubord[i].getElementsByTagName("VL_COTAS")[0]?.textContent || "0");
+                        let qtCotas = parseFloat(seriesSubord[i].getElementsByTagName("QT_COTAS")[0].textContent);
+                        let vlCotas = parseFloat(seriesSubord[i].getElementsByTagName("VL_COTAS")[0].textContent);
                         let valorTotal = qtCotas * vlCotas;
-                        let qtCotistas = parseInt(seriesSubord[i].getElementsByTagName("QT_COTISTAS")[0]?.textContent || "0");
+                        let qtCotistas = parseInt(xmlDoc.getElementsByTagName("QT_COTISTAS")[seriesSenior.length + i].textContent);
                         
                         if (valorTotal > 0) {
-                            cotasInfo += `
-                                <div class="cota-item">
-                                    <p><strong>${tipo} (${serie})</strong></p>
-                                    <p>Quantidade: ${qtCotas.toLocaleString('pt-BR')}</p>
-                                    <p>Valor da Cota: R$ ${vlCotas.toLocaleString('pt-BR')}</p>
-                                    <p>Valor Total: R$ ${valorTotal.toLocaleString('pt-BR')}</p>
-                                    <p>Quantidade de Cotistas: ${qt
-::contentReference[oaicite:6]{index=6}
- 
+                            cotasInfo += `<p><strong>${tipo} (${serie})</strong> - Quantidade: ${qtCotas.toLocaleString('pt-BR')} | Valor: R$ ${vlCotas.toLocaleString('pt-BR')} | Total: R$ ${valorTotal.toLocaleString('pt-BR')} | Cotistas: ${qtCotistas}</p>`;
+                        }
+                    }
+                    
+                    // Extraindo rentabilidade
+                    let rentabilidadeInfo = "<h3>Rentabilidade</h3>";
+                    const rentabilidades = xmlDoc.getElementsByTagName("RENT_MES")[0].children;
+                    for (let i = 0; i < rentabilidades.length; i++) {
+                        let serie = rentabilidades[i].getElementsByTagName("SERIE")[0]?.textContent || "Sem Série";
+                        let tipo = rentabilidades[i].getElementsByTagName("TIPO")[0]?.textContent || "Senior";
+                        let rentabilidade = rentabilidades[i].getElementsByTagName("PR_APURADA")[0].textContent;
+                        rentabilidadeInfo += `<p><strong>${tipo} (${serie})</strong> - Rentabilidade: ${rentabilidade}%</p>`;
+                    }
+                    
+                    // Montando a exibição
+                    document.getElementById("output").innerHTML = `
+                        <h3>Informações do XML</h3>
+                        <p><strong>Versão:</strong> ${versao}</p>
+                        <p><strong>Data de Competência:</strong> ${dataCompetencia}</p>
+                        <p><strong>CNPJ Administrador:</strong> ${cnpjAdm}</p>
+                        <p><strong>Patrimônio Líquido:</strong> R$ ${parseFloat(patrimonioLiquido).toLocaleString('pt-BR')}</p>
+                        ${cotasInfo}
+                        ${rentabilidadeInfo}
+                    `;
+                };
+                reader.readAsText(file);
+            }
+        }
+    </script>
+</head>
+<body>
+    <h2>Importar XML</h2>
+    <input type="file" accept=".xml" onchange="handleFileSelect(event)">
+    <div id="output" style="margin-top: 20px;"></div>
+</body>
+</html>
