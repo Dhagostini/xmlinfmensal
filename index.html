@@ -8,6 +8,11 @@
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (file) {
+                if (!file.name.endsWith('.xml')) {
+                    alert('Por favor, selecione um arquivo XML válido.');
+                    return;
+                }
+                
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const parser = new DOMParser();
@@ -19,10 +24,22 @@
                     const cnpjAdm = xmlDoc.getElementsByTagName("NR_CNPJ_ADM")[0].textContent;
                     const patrimonioLiquido = xmlDoc.getElementsByTagName("VL_SOM_PATRLIQ")[0].textContent;
                     
-                    // Extraindo informações de cotas e valores
+                    // Extraindo informações de cotas e rentabilidade
                     let cotasInfo = "<h3>Informações de Cotas</h3>";
                     const seriesSenior = xmlDoc.getElementsByTagName("DESC_SERIE_CLASSE_SENIOR");
                     const seriesSubord = xmlDoc.getElementsByTagName("DESC_SERIE_CLASSE_SUBORD");
+                    const rentabilidades = xmlDoc.getElementsByTagName("RENT_MES")[0]?.children || [];
+                    
+                    function getRentabilidade(serie, tipo) {
+                        for (let i = 0; i < rentabilidades.length; i++) {
+                            let rentSerie = rentabilidades[i].getElementsByTagName("SERIE")[0]?.textContent || "Sem Série";
+                            let rentTipo = rentabilidades[i].getElementsByTagName("TIPO")[0]?.textContent || "Senior";
+                            if (rentSerie === serie && rentTipo === tipo) {
+                                return rentabilidades[i].getElementsByTagName("PR_APURADA")[0]?.textContent || "-";
+                            }
+                        }
+                        return "-";
+                    }
                     
                     cotasInfo += "<h4>Senior</h4>";
                     for (let i = 0; i < seriesSenior.length; i++) {
@@ -30,10 +47,12 @@
                         let qtCotas = parseFloat(seriesSenior[i].getElementsByTagName("QT_COTAS")[0].textContent);
                         let vlCotas = parseFloat(seriesSenior[i].getElementsByTagName("VL_COTAS")[0].textContent);
                         let valorTotal = qtCotas * vlCotas;
-                        let qtCotistas = parseInt(xmlDoc.getElementsByTagName("QT_COTISTAS")[i].textContent);
+                        let qtCotistasElem = seriesSenior[i].getElementsByTagName("QT_COTISTAS")[0];
+                        let qtCotistas = qtCotistasElem ? parseInt(qtCotistasElem.textContent) : 0;
+                        let rentabilidade = getRentabilidade(serie, "Senior");
                         
                         if (valorTotal > 0) {
-                            cotasInfo += `<p><strong>${serie}</strong> - Quantidade: ${qtCotas.toLocaleString('pt-BR')} | Valor: R$ ${vlCotas.toLocaleString('pt-BR')} | Total: R$ ${valorTotal.toLocaleString('pt-BR')} | Cotistas: ${qtCotistas}</p>`;
+                            cotasInfo += `<p><strong>${serie}</strong> - Quantidade: ${qtCotas.toLocaleString('pt-BR')} | Valor: R$ ${vlCotas.toLocaleString('pt-BR')} | Total: R$ ${valorTotal.toLocaleString('pt-BR')} | Cotistas: ${qtCotistas} | Rentabilidade: ${rentabilidade}%</p>`;
                         }
                     }
                     
@@ -44,21 +63,13 @@
                         let qtCotas = parseFloat(seriesSubord[i].getElementsByTagName("QT_COTAS")[0].textContent);
                         let vlCotas = parseFloat(seriesSubord[i].getElementsByTagName("VL_COTAS")[0].textContent);
                         let valorTotal = qtCotas * vlCotas;
-                        let qtCotistas = parseInt(xmlDoc.getElementsByTagName("QT_COTISTAS")[seriesSenior.length + i].textContent);
+                        let qtCotistasElem = seriesSubord[i].getElementsByTagName("QT_COTISTAS")[0];
+                        let qtCotistas = qtCotistasElem ? parseInt(qtCotistasElem.textContent) : 0;
+                        let rentabilidade = getRentabilidade(serie, tipo);
                         
                         if (valorTotal > 0) {
-                            cotasInfo += `<p><strong>${tipo} (${serie})</strong> - Quantidade: ${qtCotas.toLocaleString('pt-BR')} | Valor: R$ ${vlCotas.toLocaleString('pt-BR')} | Total: R$ ${valorTotal.toLocaleString('pt-BR')} | Cotistas: ${qtCotistas}</p>`;
+                            cotasInfo += `<p><strong>${tipo} (${serie})</strong> - Quantidade: ${qtCotas.toLocaleString('pt-BR')} | Valor: R$ ${vlCotas.toLocaleString('pt-BR')} | Total: R$ ${valorTotal.toLocaleString('pt-BR')} | Cotistas: ${qtCotistas} | Rentabilidade: ${rentabilidade}%</p>`;
                         }
-                    }
-                    
-                    // Extraindo rentabilidade
-                    let rentabilidadeInfo = "<h3>Rentabilidade</h3>";
-                    const rentabilidades = xmlDoc.getElementsByTagName("RENT_MES")[0].children;
-                    for (let i = 0; i < rentabilidades.length; i++) {
-                        let serie = rentabilidades[i].getElementsByTagName("SERIE")[0]?.textContent || "Sem Série";
-                        let tipo = rentabilidades[i].getElementsByTagName("TIPO")[0]?.textContent || "Senior";
-                        let rentabilidade = rentabilidades[i].getElementsByTagName("PR_APURADA")[0].textContent;
-                        rentabilidadeInfo += `<p><strong>${tipo} (${serie})</strong> - Rentabilidade: ${rentabilidade}%</p>`;
                     }
                     
                     // Montando a exibição
@@ -69,7 +80,6 @@
                         <p><strong>CNPJ Administrador:</strong> ${cnpjAdm}</p>
                         <p><strong>Patrimônio Líquido:</strong> R$ ${parseFloat(patrimonioLiquido).toLocaleString('pt-BR')}</p>
                         ${cotasInfo}
-                        ${rentabilidadeInfo}
                     `;
                 };
                 reader.readAsText(file);
