@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Importar XML</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
     <script>
         function handleFileSelect(event) {
             const file = event.target.files[0];
@@ -24,8 +39,19 @@
                     const cnpjAdm = xmlDoc.getElementsByTagName("NR_CNPJ_ADM")[0].textContent;
                     const patrimonioLiquido = xmlDoc.getElementsByTagName("VL_SOM_PATRLIQ")[0].textContent;
                     
-                    // Extraindo informações de cotas e rentabilidade
-                    let cotasInfo = "<h3>Informações de Cotas</h3>";
+                    // Construindo a tabela de cotas
+                    let tabelaCotas = "<h3>Informações de Cotas</h3>";
+                    tabelaCotas += `<table>
+                        <tr>
+                            <th>Classe</th>
+                            <th>Série</th>
+                            <th>Quantidade</th>
+                            <th>Valor da Cota</th>
+                            <th>Valor Total</th>
+                            <th>Quantidade de Cotistas</th>
+                            <th>Rentabilidade</th>
+                        </tr>`;
+                    
                     const seriesSenior = xmlDoc.getElementsByTagName("DESC_SERIE_CLASSE_SENIOR");
                     const seriesSubord = xmlDoc.getElementsByTagName("DESC_SERIE_CLASSE_SUBORD");
                     const rentabilidades = xmlDoc.getElementsByTagName("RENT_MES")[0]?.children || [];
@@ -41,36 +67,43 @@
                         return "-";
                     }
                     
-                    cotasInfo += "<h4>Senior</h4>";
+                    function adicionarLinhaTabela(tipo, serie, qtCotas, vlCotas, qtCotistas, rentabilidade) {
+                        let valorTotal = qtCotas * vlCotas;
+                        if (valorTotal > 0) {
+                            tabelaCotas += `<tr>
+                                <td>${tipo}</td>
+                                <td>${serie}</td>
+                                <td>${qtCotas.toLocaleString('pt-BR')}</td>
+                                <td>R$ ${vlCotas.toLocaleString('pt-BR')}</td>
+                                <td>R$ ${valorTotal.toLocaleString('pt-BR')}</td>
+                                <td>${qtCotistas}</td>
+                                <td>${rentabilidade}%</td>
+                            </tr>`;
+                        }
+                    }
+                    
                     for (let i = 0; i < seriesSenior.length; i++) {
                         let serie = seriesSenior[i].getElementsByTagName("SERIE")[0].textContent;
                         let qtCotas = parseFloat(seriesSenior[i].getElementsByTagName("QT_COTAS")[0].textContent);
                         let vlCotas = parseFloat(seriesSenior[i].getElementsByTagName("VL_COTAS")[0].textContent);
-                        let valorTotal = qtCotas * vlCotas;
                         let qtCotistasElem = seriesSenior[i].getElementsByTagName("QT_COTISTAS")[0];
                         let qtCotistas = qtCotistasElem ? parseInt(qtCotistasElem.textContent) : 0;
                         let rentabilidade = getRentabilidade(serie, "Senior");
-                        
-                        if (valorTotal > 0) {
-                            cotasInfo += `<p><strong>${serie}</strong> - Quantidade: ${qtCotas.toLocaleString('pt-BR')} | Valor: R$ ${vlCotas.toLocaleString('pt-BR')} | Total: R$ ${valorTotal.toLocaleString('pt-BR')} | Cotistas: ${qtCotistas} | Rentabilidade: ${rentabilidade}%</p>`;
-                        }
+                        adicionarLinhaTabela("Senior", serie, qtCotas, vlCotas, qtCotistas, rentabilidade);
                     }
                     
-                    cotasInfo += "<h4>Subordinada</h4>";
                     for (let i = 0; i < seriesSubord.length; i++) {
                         let tipo = seriesSubord[i].getElementsByTagName("TIPO")[0].textContent;
                         let serie = seriesSubord[i].getElementsByTagName("SERIE")[0]?.textContent || "Sem Série";
                         let qtCotas = parseFloat(seriesSubord[i].getElementsByTagName("QT_COTAS")[0].textContent);
                         let vlCotas = parseFloat(seriesSubord[i].getElementsByTagName("VL_COTAS")[0].textContent);
-                        let valorTotal = qtCotas * vlCotas;
                         let qtCotistasElem = seriesSubord[i].getElementsByTagName("QT_COTISTAS")[0];
                         let qtCotistas = qtCotistasElem ? parseInt(qtCotistasElem.textContent) : 0;
                         let rentabilidade = getRentabilidade(serie, tipo);
-                        
-                        if (valorTotal > 0) {
-                            cotasInfo += `<p><strong>${tipo} (${serie})</strong> - Quantidade: ${qtCotas.toLocaleString('pt-BR')} | Valor: R$ ${vlCotas.toLocaleString('pt-BR')} | Total: R$ ${valorTotal.toLocaleString('pt-BR')} | Cotistas: ${qtCotistas} | Rentabilidade: ${rentabilidade}%</p>`;
-                        }
+                        adicionarLinhaTabela(tipo, serie, qtCotas, vlCotas, qtCotistas, rentabilidade);
                     }
+                    
+                    tabelaCotas += "</table>";
                     
                     // Montando a exibição
                     document.getElementById("output").innerHTML = `
@@ -79,7 +112,7 @@
                         <p><strong>Data de Competência:</strong> ${dataCompetencia}</p>
                         <p><strong>CNPJ Administrador:</strong> ${cnpjAdm}</p>
                         <p><strong>Patrimônio Líquido:</strong> R$ ${parseFloat(patrimonioLiquido).toLocaleString('pt-BR')}</p>
-                        ${cotasInfo}
+                        ${tabelaCotas}
                     `;
                 };
                 reader.readAsText(file);
