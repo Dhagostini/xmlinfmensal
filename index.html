@@ -87,7 +87,7 @@
                         let qtCotas = parseFloat(seriesSenior[i].getElementsByTagName("QT_COTAS")[0].textContent);
                         let vlCotas = parseFloat(seriesSenior[i].getElementsByTagName("VL_COTAS")[0].textContent);
                         let qtCotistasElem = seriesSenior[i].getElementsByTagName("QT_COTISTAS")[0];
-                        let qtCotistas = parseFloat(seriesSenior[i].getElementsByTagName("QT_COTISTAS")[1].textContent);
+                        let qtCotistas = parseFloat(seriesSenior[i].getElementsByTagName("QT_COTISTAS")[0].textContent);
                         let rentabilidade = getRentabilidade(serie, "Senior");
                         adicionarLinhaTabela("Senior", serie, qtCotas, vlCotas, qtCotistas, rentabilidade);
                     }
