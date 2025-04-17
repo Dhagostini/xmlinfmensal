@@ -27,18 +27,27 @@ function handleFileSelect(event) {
             alert('Por favor, selecione um arquivo XML válido.');
             return;
         }
-        
+
         const reader = new FileReader();
         reader.onload = function(e) {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(e.target.result, "text/xml");
 
+            // Verificação se o arquivo foi lido corretamente
+            console.log("Arquivo XML carregado com sucesso");
+
             // Extraindo informações básicas
-            const versao = xmlDoc.getElementsByTagName("VERSAO")[0].textContent;
-            const dataCompetencia = xmlDoc.getElementsByTagName("DT_COMPT")[0].textContent;
-            const cnpjAdm = xmlDoc.getElementsByTagName("NR_CNPJ_ADM")[0].textContent;
-            const patrimonioLiquido = xmlDoc.getElementsByTagName("VL_SOM_PATRLIQ")[0].textContent;
-            
+            const versao = xmlDoc.getElementsByTagName("VERSAO")[0]?.textContent || "Não disponível";
+            const dataCompetencia = xmlDoc.getElementsByTagName("DT_COMPT")[0]?.textContent || "Não disponível";
+            const cnpjAdm = xmlDoc.getElementsByTagName("NR_CNPJ_ADM")[0]?.textContent || "Não disponível";
+            const patrimonioLiquido = xmlDoc.getElementsByTagName("VL_SOM_PATRLIQ")[0]?.textContent || "0";
+
+            // Exibindo as informações gerais no console para depuração
+            console.log("Versão:", versao);
+            console.log("Data Competência:", dataCompetencia);
+            console.log("CNPJ Administrador:", cnpjAdm);
+            console.log("Patrimônio Líquido:", patrimonioLiquido);
+
             // Construindo a tabela de cotas
             let tabelaCotas = "<h3>Informações de Cotas</h3>";
             tabelaCotas += `<table>
@@ -84,9 +93,9 @@ function handleFileSelect(event) {
 
             // Extraindo as informações dos cotistas para as classes "Senior"
             for (let i = 0; i < classesSenior.length; i++) {
-                let serie = classesSenior[i].getElementsByTagName("SERIE")[0].textContent;
-                let qtCotas = parseFloat(classesSenior[i].getElementsByTagName("QT_COTAS")[0].textContent);
-                let vlCotas = parseFloat(classesSenior[i].getElementsByTagName("VL_COTAS")[0].textContent);
+                let serie = classesSenior[i].getElementsByTagName("SERIE")[0]?.textContent || "Sem Série";
+                let qtCotas = parseFloat(classesSenior[i].getElementsByTagName("QT_COTAS")[0]?.textContent || "0");
+                let vlCotas = parseFloat(classesSenior[i].getElementsByTagName("VL_COTAS")[0]?.textContent || "0");
                 let qtCotistas = parseInt(classesSenior[i].getElementsByTagName("QT_COTISTAS")[0]?.textContent) || 0;
                 let rentabilidade = getRentabilidade(serie, "Senior");
                 adicionarLinhaTabela("Senior", serie, qtCotas, vlCotas, qtCotistas, rentabilidade);
@@ -94,10 +103,10 @@ function handleFileSelect(event) {
 
             // Extraindo as informações dos cotistas para as classes "Subordinada"
             for (let i = 0; i < classesSubord.length; i++) {
-                let tipo = classesSubord[i].getElementsByTagName("TIPO")[0].textContent;
+                let tipo = classesSubord[i].getElementsByTagName("TIPO")[0]?.textContent || "Sem Tipo";
                 let serie = classesSubord[i].getElementsByTagName("SERIE")[0]?.textContent || "Sem Série";
-                let qtCotas = parseFloat(classesSubord[i].getElementsByTagName("QT_COTAS")[0].textContent);
-                let vlCotas = parseFloat(classesSubord[i].getElementsByTagName("VL_COTAS")[0].textContent);
+                let qtCotas = parseFloat(classesSubord[i].getElementsByTagName("QT_COTAS")[0]?.textContent || "0");
+                let vlCotas = parseFloat(classesSubord[i].getElementsByTagName("VL_COTAS")[0]?.textContent || "0");
                 let qtCotistas = parseInt(classesSubord[i].getElementsByTagName("QT_COTISTAS")[0]?.textContent) || 0;
                 let rentabilidade = getRentabilidade(serie, tipo);
                 adicionarLinhaTabela(tipo, serie, qtCotas, vlCotas, qtCotistas, rentabilidade);
@@ -115,9 +124,14 @@ function handleFileSelect(event) {
                 ${tabelaCotas}
             `;
         };
+
+        reader.onerror = function() {
+            console.error("Erro ao ler o arquivo.");
+        };
+
         reader.readAsText(file);
     }
-    }
+}
     </script>
 </head>
 <body>
