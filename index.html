@@ -41,7 +41,7 @@
                     
                     // Construindo a tabela de cotas
                     let tabelaCotas = "<h3>Informações de Cotas</h3>";
-                    tabelaCotas += <table>
+                    tabelaCotas += `<table>
                         <tr>
                             <th>Classe</th>
                             <th>Série</th>
@@ -50,7 +50,7 @@
                             <th>Valor Total</th>
                             <th>Quantidade de Cotistas</th>
                             <th>Rentabilidade</th>
-                        </tr>;
+                        </tr>`;
                     
                     const seriesSenior = xmlDoc.getElementsByTagName("DESC_SERIE_CLASSE_SENIOR");
                     const seriesSubord = xmlDoc.getElementsByTagName("DESC_SERIE_CLASSE_SUBORD");
@@ -70,7 +70,7 @@
                     function adicionarLinhaTabela(tipo, serie, qtCotas, vlCotas, qtCotistas, rentabilidade) {
                         let valorTotal = qtCotas * vlCotas;
                         if (valorTotal > 0) {
-                            tabelaCotas += <tr>
+                            tabelaCotas += `<tr>
                                 <td>${tipo}</td>
                                 <td>${serie}</td>
                                 <td>${qtCotas.toLocaleString('pt-BR')}</td>
@@ -78,7 +78,7 @@
                                 <td>R$ ${valorTotal.toLocaleString('pt-BR')}</td>
                                 <td>${qtCotistas}</td>
                                 <td>${rentabilidade}%</td>
-                            </tr>;
+                            </tr>`;
                         }
                     }
                     
@@ -106,14 +106,14 @@
                     tabelaCotas += "</table>";
                     
                     // Montando a exibição
-                    document.getElementById("output").innerHTML = 
+                    document.getElementById("output").innerHTML = `
                         <h3>Informações do XML</h3>
                         <p><strong>Versão:</strong> ${versao}</p>
                         <p><strong>Data de Competência:</strong> ${dataCompetencia}</p>
                         <p><strong>CNPJ Administrador:</strong> ${cnpjAdm}</p>
                         <p><strong>Patrimônio Líquido:</strong> R$ ${parseFloat(patrimonioLiquido).toLocaleString('pt-BR')}</p>
                         ${tabelaCotas}
-                    ;
+                    `;
                 };
                 reader.readAsText(file);
             }
