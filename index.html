@@ -27,28 +27,21 @@
                     alert('Por favor, selecione um arquivo XML válido.');
                     return;
                 }
-
+                
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(e.target.result, "text/xml");
-
+                    
                     // Extraindo informações básicas
-                    const versao = xmlDoc.getElementsByTagName("VERSAO")[0]?.textContent || "Não disponível";
-                    const dataCompetencia = xmlDoc.getElementsByTagName("DT_COMPT")[0]?.textContent || "Não disponível";
-                    const cnpjAdm = xmlDoc.getElementsByTagName("NR_CNPJ_ADM")[0]?.textContent || "Não disponível";
-                    const patrimonioLiquido = xmlDoc.getElementsByTagName("VL_SOM_PATRLIQ")[0]?.textContent || "0";
-
-                    // Verificando no console para depuração
-                    console.log("Arquivo XML carregado com sucesso");
-                    console.log("Versão:", versao);
-                    console.log("Data Competência:", dataCompetencia);
-                    console.log("CNPJ Administrador:", cnpjAdm);
-                    console.log("Patrimônio Líquido:", patrimonioLiquido);
-
+                    const versao = xmlDoc.getElementsByTagName("VERSAO")[0].textContent;
+                    const dataCompetencia = xmlDoc.getElementsByTagName("DT_COMPT")[0].textContent;
+                    const cnpjAdm = xmlDoc.getElementsByTagName("NR_CNPJ_ADM")[0].textContent;
+                    const patrimonioLiquido = xmlDoc.getElementsByTagName("VL_SOM_PATRLIQ")[0].textContent;
+                    
                     // Construindo a tabela de cotas
                     let tabelaCotas = "<h3>Informações de Cotas</h3>";
-                    tabelaCotas += `<table>
+                    tabelaCotas += <table>
                         <tr>
                             <th>Classe</th>
                             <th>Série</th>
@@ -57,12 +50,12 @@
                             <th>Valor Total</th>
                             <th>Quantidade de Cotistas</th>
                             <th>Rentabilidade</th>
-                        </tr>`;
-
-                    const classesSenior = xmlDoc.getElementsByTagName("CLASSE_SENIOR");
-                    const classesSubord = xmlDoc.getElementsByTagName("CLASSE_SUBORD");
+                        </tr>;
+                    
+                    const seriesSenior = xmlDoc.getElementsByTagName("DESC_SERIE_CLASSE_SENIOR");
+                    const seriesSubord = xmlDoc.getElementsByTagName("DESC_SERIE_CLASSE_SUBORD");
                     const rentabilidades = xmlDoc.getElementsByTagName("RENT_MES")[0]?.children || [];
-
+                    
                     function getRentabilidade(serie, tipo) {
                         for (let i = 0; i < rentabilidades.length; i++) {
                             let rentSerie = rentabilidades[i].getElementsByTagName("SERIE")[0]?.textContent || "Sem Série";
@@ -73,11 +66,11 @@
                         }
                         return "-";
                     }
-
+                    
                     function adicionarLinhaTabela(tipo, serie, qtCotas, vlCotas, qtCotistas, rentabilidade) {
                         let valorTotal = qtCotas * vlCotas;
                         if (valorTotal > 0) {
-                            tabelaCotas += `<tr>
+                            tabelaCotas += <tr>
                                 <td>${tipo}</td>
                                 <td>${serie}</td>
                                 <td>${qtCotas.toLocaleString('pt-BR')}</td>
@@ -85,48 +78,43 @@
                                 <td>R$ ${valorTotal.toLocaleString('pt-BR')}</td>
                                 <td>${qtCotistas}</td>
                                 <td>${rentabilidade}%</td>
-                            </tr>`;
+                            </tr>;
                         }
                     }
-
-                    // Extraindo as informações dos cotistas para as classes "Senior"
-                    for (let i = 0; i < classesSenior.length; i++) {
-                        let serie = classesSenior[i].getElementsByTagName("SERIE")[0]?.textContent || "Sem Série";
-                        let qtCotas = parseFloat(classesSenior[i].getElementsByTagName("QT_COTAS")[0]?.textContent || "0");
-                        let vlCotas = parseFloat(classesSenior[i].getElementsByTagName("VL_COTAS")[0]?.textContent || "0");
-                        let qtCotistas = parseInt(classesSenior[i].getElementsByTagName("QT_COTISTAS")[0]?.textContent) || 0;
+                    
+                    for (let i = 0; i < seriesSenior.length; i++) {
+                        let serie = seriesSenior[i].getElementsByTagName("SERIE")[0].textContent;
+                        let qtCotas = parseFloat(seriesSenior[i].getElementsByTagName("QT_COTAS")[0].textContent);
+                        let vlCotas = parseFloat(seriesSenior[i].getElementsByTagName("VL_COTAS")[0].textContent);
+                        let qtCotistasElem = seriesSenior[i].getElementsByTagName("QT_COTISTAS")[0];
+                        let qtCotistas = qtCotistasElem ? parseInt(qtCotistasElem.textContent) : 0;
                         let rentabilidade = getRentabilidade(serie, "Senior");
                         adicionarLinhaTabela("Senior", serie, qtCotas, vlCotas, qtCotistas, rentabilidade);
                     }
-
-                    // Extraindo as informações dos cotistas para as classes "Subordinada"
-                    for (let i = 0; i < classesSubord.length; i++) {
-                        let tipo = classesSubord[i].getElementsByTagName("TIPO")[0]?.textContent || "Sem Tipo";
-                        let serie = classesSubord[i].getElementsByTagName("SERIE")[0]?.textContent || "Sem Série";
-                        let qtCotas = parseFloat(classesSubord[i].getElementsByTagName("QT_COTAS")[0]?.textContent || "0");
-                        let vlCotas = parseFloat(classesSubord[i].getElementsByTagName("VL_COTAS")[0]?.textContent || "0");
-                        let qtCotistas = parseInt(classesSubord[i].getElementsByTagName("QT_COTISTAS")[0]?.textContent) || 0;
+                    
+                    for (let i = 0; i < seriesSubord.length; i++) {
+                        let tipo = seriesSubord[i].getElementsByTagName("TIPO")[0].textContent;
+                        let serie = seriesSubord[i].getElementsByTagName("SERIE")[0]?.textContent || "Sem Série";
+                        let qtCotas = parseFloat(seriesSubord[i].getElementsByTagName("QT_COTAS")[0].textContent);
+                        let vlCotas = parseFloat(seriesSubord[i].getElementsByTagName("VL_COTAS")[0].textContent);
+                        let qtCotistasElem = seriesSubord[i].getElementsByTagName("QT_COTISTAS")[0];
+                        let qtCotistas = qtCotistasElem ? parseInt(qtCotistasElem.textContent) : 0;
                         let rentabilidade = getRentabilidade(serie, tipo);
                         adicionarLinhaTabela(tipo, serie, qtCotas, vlCotas, qtCotistas, rentabilidade);
                     }
-
+                    
                     tabelaCotas += "</table>";
-
+                    
                     // Montando a exibição
-                    document.getElementById("output").innerHTML = `
+                    document.getElementById("output").innerHTML = 
                         <h3>Informações do XML</h3>
                         <p><strong>Versão:</strong> ${versao}</p>
                         <p><strong>Data de Competência:</strong> ${dataCompetencia}</p>
                         <p><strong>CNPJ Administrador:</strong> ${cnpjAdm}</p>
                         <p><strong>Patrimônio Líquido:</strong> R$ ${parseFloat(patrimonioLiquido).toLocaleString('pt-BR')}</p>
                         ${tabelaCotas}
-                    `;
+                    ;
                 };
-
-                reader.onerror = function() {
-                    console.error("Erro ao ler o arquivo.");
-                };
-
                 reader.readAsText(file);
             }
         }
